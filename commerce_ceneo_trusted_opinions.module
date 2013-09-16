@@ -66,7 +66,7 @@ function commerce_ceneo_trusted_opinions_attributes($order) {
   }
 
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  
+
   $attributes = array(
     'ceneo_client_email' => $order->mail,
     'ceneo_order_id' => $order_wrapper->order_id->value(),
