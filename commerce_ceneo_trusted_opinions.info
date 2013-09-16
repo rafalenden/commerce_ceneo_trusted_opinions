@@ -1,0 +1,7 @@
+name = Commerce Ceneo Trusted Opinions
+description = Integration with Ceneo Trusted Opinions external service.
+package = Commerce (contrib)
+core = 7.x
+
+dependencies[] = commerce_checkout
+configure = admin/commerce/config/ceneo-trusted-opinions

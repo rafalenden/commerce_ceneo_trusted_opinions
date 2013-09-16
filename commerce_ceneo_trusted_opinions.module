@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function commerce_ceneo_trusted_opinions_menu() {
+  $items = array();
+  $items['admin/commerce/config/ceneo-trusted-opinions'] = array(
+    'title' => 'Ceneo Trusted Opinions',
+    'description' => 'Configuration for Ceneo Trusted Opinions.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_ceneo_trusted_opinions_admin_settings'),
+    'access arguments' => array('administer commerce ceneo trusted opinions'),
+    'file' => 'commerce_ceneo_trusted_opinions.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function commerce_ceneo_trusted_opinions_permission() {
+  return array(
+    'administer commerce ceneo trusted opinions' => array(
+      'title' => t('Administer Commerce Ceneo Trusted Opinions'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_commerce_checkout_router().
+ */
+function commerce_ceneo_trusted_opinions_commerce_checkout_router($order, $checkout_page) {
+  if ($checkout_page['page_id'] == 'complete') {
+    $attributes = commerce_ceneo_trusted_opinions_attributes($order);
+
+    $product_ids = implode('#', $attributes['ceneo_shop_product_ids']);
+
+    $script = '
+ceneo_client_email = "' . $attributes['ceneo_client_email'] . '";
+ceneo_order_id = "' . $attributes['ceneo_order_id'] . '";
+ceneo_shop_product_ids = "#' . $product_ids . '#";
+';
+    drupal_add_js($script, array(
+      'type' => 'inline',
+      'scope' => 'footer',
+      'preprocess' => FALSE,
+    ));
+    drupal_add_js('https://ssl.ceneo.pl/transactions/track/v2/script.js?accountGuid=' . $attributes['ceneo_account_guid'], array(
+      'type' => 'external',
+      'scope' => 'footer',
+      'preprocess' => FALSE,
+    ));
+  }
+}
+
+/**
+ * Get tracking attributes.
+ */
+function commerce_ceneo_trusted_opinions_attributes($order) {
+  // Checking if Yandex.Metrics counter code placed on the site.
+  $guid = variable_get('commerce_ceneo_trusted_opinions_guid', '');
+
+  if (empty($guid)) {
+    return '';
+  }
+
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+  
+  $attributes = array(
+    'ceneo_client_email' => $order->mail,
+    'ceneo_order_id' => $order_wrapper->order_id->value(),
+    'ceneo_shop_product_ids' => array(),
+    'ceneo_account_guid' => $guid,
+  );
+
+  // Loop through the products on the order.
+  foreach ($order_wrapper->commerce_line_items as $line_item) {
+    $properties = $line_item->getPropertyInfo();
+    if (isset($properties['commerce_product'])) {
+      $attributes['ceneo_shop_product_ids'][] = $line_item->commerce_product->product_id->value();
+    }
+  }
+
+  // Allow modules to alter the transaction arguments.
+  drupal_alter('commerce_ceneo_trusted_opinions_attributes', $attributes, $order_wrapper);
+
+  return $attributes;
+}

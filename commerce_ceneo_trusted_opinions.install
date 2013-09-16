@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * Implements hook_uninstall().
+ */
+function commerce_ceneo_trusted_opinions_uninstall() {
+  variable_del('commerce_ceneo_trusted_opinions_guid');
+}
