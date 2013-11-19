@@ -58,7 +58,7 @@ ceneo_shop_product_ids = "#' . $product_ids . '#";
  * Get tracking attributes.
  */
 function commerce_ceneo_trusted_opinions_attributes($order) {
-  // Checking if Yandex.Metrics counter code placed on the site.
+  // Checking if module is configured.
   $guid = variable_get('commerce_ceneo_trusted_opinions_guid', '');
 
   if (empty($guid)) {
